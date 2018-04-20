@@ -1,0 +1,3 @@
+*.pyc
+dist/
+gym_pacman.egg-info
