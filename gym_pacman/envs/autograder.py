@@ -62,7 +62,7 @@ def readCommand(argv):
     parser.add_option('--print-tests', '-p',
                     dest = 'printTestCase',
                     action = 'store_true',
-                    help = 'Print each test case before running them.')
+                    help = 'print(each test case before running them.'))
     parser.add_option('--test', '-t',
                       dest = 'runTest',
                       default = None,
@@ -81,8 +81,8 @@ def readCommand(argv):
 
 # confirm we should author solution files
 def confirmGenerate():
-    print 'WARNING: this action will overwrite any solution files.'
-    print 'Are you sure you want to proceed? (yes/no)'
+    print('WARNING: this action will overwrite any solution files.')
+    print('Are you sure you want to proceed? (yes/no)')
     while True:
         ans = sys.stdin.readline().strip()
         if ans == 'yes':
@@ -90,7 +90,7 @@ def confirmGenerate():
         elif ans == 'no':
             sys.exit(0)
         else:
-            print 'please answer either "yes" or "no"'
+            print('please answer either "yes" or "no"')
 
 
 # TODO: Fix this so that it tracebacks work correctly
@@ -110,10 +110,10 @@ def setModuleName(module, filename):
         elif type(o) == classType:
             setattr(o, '__file__', filename)
             # TODO: assign member __file__'s?
-        #print i, type(o)
+        #print(i, type(o))
 
 
-#from cStringIO import StringIO
+#from io import StringIO
 
 def loadModuleString(moduleSource):
     # Below broken, imp doesn't believe its being passed a file:
@@ -183,12 +183,12 @@ def splitStrings(d):
 
 def printTest(testDict, solutionDict):
     pp = pprint.PrettyPrinter(indent=4)
-    print "Test case:"
+    print("Test case:")
     for line in testDict["__raw_lines__"]:
-        print "   |", line
-    print "Solution:"
+        print("   |", line)
+    print("Solution:")
     for line in solutionDict["__raw_lines__"]:
-        print "   |", line
+        print("   |", line)
 
 
 def runTest(testName, moduleDict, printTestCase=False, display=None):
@@ -232,7 +232,7 @@ def getTestSubdirs(testParser, testRoot, questionToGrade):
     if questionToGrade != None:
         questions = getDepends(testParser, testRoot, questionToGrade)
         if len(questions) > 1:
-            print 'Note: due to dependencies, the following tests will be run: %s' % ' '.join(questions)
+            print('Note: due to dependencies, the following tests will be run: %s' % ' '.join(questions))
         return questions
     if 'order' in problemDict:
         return problemDict['order'].split()

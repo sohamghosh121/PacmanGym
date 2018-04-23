@@ -18,10 +18,13 @@ import random
 import string
 import time
 import types
-import Tkinter
+import tkinter as Tkinter
 import io
 
 from PIL import Image, ImageDraw
+
+d_o_e = None # set this in begin graphics
+d_w = Tkinter._tkinter.DONT_WAIT
 
 _Windows = sys.platform == 'win32'  # True if on Win95/98/NT
 
@@ -58,7 +61,7 @@ def sleep(secs):
 
 def begin_graphics(width=640, height=480, color=formatColor(0, 0, 0), title=None):
 
-    global _root_window, _canvas, _canvas_x, _canvas_y, _canvas_xs, _canvas_ys, _bg_color
+    global _root_window, d_o_e, _canvas, _canvas_x, _canvas_y, _canvas_xs, _canvas_ys, _bg_color
 
     # Check for duplicate call
     if _root_window is not None:
@@ -72,8 +75,9 @@ def begin_graphics(width=640, height=480, color=formatColor(0, 0, 0), title=None
 
     # Create the root window
     _root_window = Tkinter.Tk()
+    d_o_e = _root_window.dooneevent
     _root_window.protocol('WM_DELETE_WINDOW', _destroy_window)
-    _root_window.title(title or 'Graphics Window')
+    # _root_window.title(title or 'Graphics Window')
     _root_window.resizable(0, 0)
 
     # Create the canvas object
@@ -86,52 +90,6 @@ def begin_graphics(width=640, height=480, color=formatColor(0, 0, 0), title=None
         _root_window = None
         raise
 
-    # Bind to key-down and key-up events
-    _root_window.bind( "<KeyPress>", _keypress )
-    _root_window.bind( "<KeyRelease>", _keyrelease )
-    _root_window.bind( "<FocusIn>", _clear_keys )
-    _root_window.bind( "<FocusOut>", _clear_keys )
-    _root_window.bind( "<Button-1>", _leftclick )
-    _root_window.bind( "<Button-2>", _rightclick )
-    _root_window.bind( "<Button-3>", _rightclick )
-    _root_window.bind( "<Control-Button-1>", _ctrl_leftclick)
-    _clear_keys()
-
-_leftclick_loc = None
-_rightclick_loc = None
-_ctrl_leftclick_loc = None
-
-def _leftclick(event):
-    global _leftclick_loc
-    _leftclick_loc = (event.x, event.y)
-
-def _rightclick(event):
-    global _rightclick_loc
-    _rightclick_loc = (event.x, event.y)
-
-def _ctrl_leftclick(event):
-    global _ctrl_leftclick_loc
-    _ctrl_leftclick_loc = (event.x, event.y)
-
-def wait_for_click():
-    while True:
-        global _leftclick_loc
-        global _rightclick_loc
-        global _ctrl_leftclick_loc
-        if _leftclick_loc != None:
-            val = _leftclick_loc
-            _leftclick_loc = None
-            return val, 'left'
-        if _rightclick_loc != None:
-            val = _rightclick_loc
-            _rightclick_loc = None
-            return val, 'right'
-        if _ctrl_leftclick_loc != None:
-            val = _ctrl_leftclick_loc
-            _ctrl_leftclick_loc = None
-            return val, 'ctrl_left'
-        sleep(0.05)
-
 def draw_background():
     corners = [(0,0), (0, _canvas_ys), (_canvas_xs, _canvas_ys), (_canvas_xs, 0)]
     polygon(corners, _bg_color, fillColor=_bg_color, filled=True, smoothed=False)
@@ -141,7 +99,7 @@ def _destroy_window(event=None):
 #    global _root_window
 #    _root_window.destroy()
 #    _root_window = None
-    #print "DESTROY"
+    # print("DESTROY")
 
 def end_graphics():
     global _root_window, _canvas, _mouse_enabled
@@ -150,8 +108,8 @@ def end_graphics():
             sleep(1)
             if _root_window != None:
                 _root_window.destroy()
-        except SystemExit, e:
-            print 'Ending graphics raised an exception:', e
+        except SystemExit as e:
+            print('Ending graphics raised an exception:', e)
     finally:
         _root_window = None
         _canvas = None
@@ -242,79 +200,7 @@ def line(here, there, color=formatColor(0, 0, 0), width=2):
     x1, y1 = there[0], there[1]
     return _canvas.create_line(x0, y0, x1, y1, fill=color, width=width)
 
-##############################################################################
-### Keypress handling ########################################################
-##############################################################################
-
-# We bind to key-down and key-up events.
-
-_keysdown = {}
-_keyswaiting = {}
-# This holds an unprocessed key release.  We delay key releases by up to
-# one call to keys_pressed() to get round a problem with auto repeat.
-_got_release = None
-
-def _keypress(event):
-    global _got_release
-    #remap_arrows(event)
-    _keysdown[event.keysym] = 1
-    _keyswaiting[event.keysym] = 1
-#    print event.char, event.keycode
-    _got_release = None
-
-def _keyrelease(event):
-    global _got_release
-    #remap_arrows(event)
-    try:
-        del _keysdown[event.keysym]
-    except:
-        pass
-    _got_release = 1
-
-def remap_arrows(event):
-    # TURN ARROW PRESSES INTO LETTERS (SHOULD BE IN KEYBOARD AGENT)
-    if event.char in ['a', 's', 'd', 'w']:
-        return
-    if event.keycode in [37, 101]: # LEFT ARROW (win / x)
-        event.char = 'a'
-    if event.keycode in [38, 99]: # UP ARROW
-        event.char = 'w'
-    if event.keycode in [39, 102]: # RIGHT ARROW
-        event.char = 'd'
-    if event.keycode in [40, 104]: # DOWN ARROW
-        event.char = 's'
-
-def _clear_keys(event=None):
-    global _keysdown, _got_release, _keyswaiting
-    _keysdown = {}
-    _keyswaiting = {}
-    _got_release = None
-
-def keys_pressed(d_o_e=Tkinter.tkinter.dooneevent,
-                 d_w=Tkinter.tkinter.DONT_WAIT):
-    d_o_e(d_w)
-    if _got_release:
-        d_o_e(d_w)
-    return _keysdown.keys()
-
-def keys_waiting():
-    global _keyswaiting
-    keys = _keyswaiting.keys()
-    _keyswaiting = {}
-    return keys
-
-# Block for a list of keys...
-
-def wait_for_keys():
-    keys = []
-    while keys == []:
-        keys = keys_pressed()
-        sleep(0.05)
-    return keys
-
-def remove_from_screen(x,
-                       d_o_e=Tkinter.tkinter.dooneevent,
-                       d_w=Tkinter.tkinter.DONT_WAIT):
+def remove_from_screen(x):
     _canvas.delete(x)
     d_o_e(d_w)
 
@@ -324,9 +210,7 @@ def _adjust_coords(coord_list, x, y):
         coord_list[i + 1] = coord_list[i + 1] + y
     return coord_list
 
-def move_to(object, x, y=None,
-            d_o_e=Tkinter.tkinter.dooneevent,
-            d_w=Tkinter.tkinter.DONT_WAIT):
+def move_to(object, x, y=None):
     if y is None:
         try: x, y = x
         except: raise  'incomprehensible coordinates'
@@ -346,12 +230,10 @@ def move_to(object, x, y=None,
     _canvas.coords(object, *newCoords)
     d_o_e(d_w)
 
-def move_by(object, x, y=None,
-            d_o_e=Tkinter.tkinter.dooneevent,
-            d_w=Tkinter.tkinter.DONT_WAIT, lift=False):
+def move_by(object, x, y=None, lift=False):
     if y is None:
         try: x, y = x
-        except: raise Exception, 'incomprehensible coordinates'
+        except: raise Exception('incomprehensible coordinates')
 
     horiz = True
     newCoords = []

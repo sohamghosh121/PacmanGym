@@ -12,12 +12,9 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
-from game import Agent
-from game import Actions
-from game import Directions
+from .game import Agent, Actions, Directions
 import random
-from util import manhattanDistance
-import util
+from .util import manhattanDistance, raiseNotDefined, chooseFromDistribution, Counter
 
 class GhostAgent( Agent ):
     def __init__( self, index ):
@@ -28,16 +25,16 @@ class GhostAgent( Agent ):
         if len(dist) == 0:
             return Directions.STOP
         else:
-            return util.chooseFromDistribution( dist )
+            return chooseFromDistribution( dist )
 
     def getDistribution(self, state):
         "Returns a Counter encoding a distribution over actions from the provided state."
-        util.raiseNotDefined()
+        raiseNotDefined()
 
 class RandomGhost( GhostAgent ):
     "A ghost that chooses a legal action uniformly at random."
     def getDistribution( self, state ):
-        dist = util.Counter()
+        dist = Counter()
         for a in state.getLegalActions( self.index ): dist[a] = 1.0
         dist.normalize()
         return dist
@@ -74,7 +71,7 @@ class DirectionalGhost( GhostAgent ):
         bestActions = [action for action, distance in zip( legalActions, distancesToPacman ) if distance == bestScore]
 
         # Construct distribution
-        dist = util.Counter()
+        dist = Counter()
         for a in bestActions: dist[a] = bestProb / len(bestActions)
         for a in legalActions: dist[a] += ( 1-bestProb ) / len(legalActions)
         dist.normalize()

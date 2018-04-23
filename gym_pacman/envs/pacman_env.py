@@ -3,15 +3,16 @@ from gym import spaces
 from gym.utils import seeding
 import numpy as np
 
-import graphicsDisplay as gd
-from graphicsDisplay import DEFAULT_GRID_SIZE
+from .graphicsDisplay import PacmanGraphics, DEFAULT_GRID_SIZE
 
-from game import Actions
-from pacman import ClassicGameRules
-from layout import getLayout
+from .game import Actions
+from .pacman import ClassicGameRules
+from .layout import getLayout
 
-from ghostAgents import DirectionalGhost
-from pacmanAgents import OpenAIAgent
+from .ghostAgents import DirectionalGhost
+from .pacmanAgents import OpenAIAgent
+
+
 
 DEFAULT_GHOST_TYPE = 'DirectionalGhost'
 
@@ -34,7 +35,7 @@ class PacmanEnv(gym.Env):
     def __init__(self):
         self.chooseLayout()
         self.action_space = spaces.Discrete(4) # up, down, left right
-        self.display = gd.PacmanGraphics(1.0)
+        self.display = PacmanGraphics(1.0)
         self.setObservationSpace()
         self._action_set = range(len(PACMAN_ACTIONS))
         self.location = None
@@ -47,14 +48,14 @@ class PacmanEnv(gym.Env):
                 int(screen_width),
                 3), dtype=np.uint8)
 
-    def chooseLayout(self, chosenLayout=None, no_ghosts=True):
+    def chooseLayout(self, chosenLayout=None, no_ghosts=False):
         if chosenLayout is None:
             if not no_ghosts:
                 chosenLayout = np.random.choice(self.layouts)
             else:
                 chosenLayout = np.random.choice(self.noGhost_layouts)
         self.chosen_layout = chosenLayout
-        print "Chose layout", chosenLayout
+        print("Chose layout", chosenLayout)
         self.layout = getLayout(chosenLayout)
         self.maze_size = (self.layout.width, self.layout.height)
 
@@ -151,7 +152,7 @@ class PartiallyObservablePacmanEnv(PacmanEnv):
     def _get_image(self):
         # get x, y
         image = self.display.image
-        
+
         w, h = image.size
         DEFAULT_GRID_SIZE_X, DEFAULT_GRID_SIZE_Y = w / float(self.layout.width), h / float(self.layout.height)
 

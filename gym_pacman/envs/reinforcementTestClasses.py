@@ -18,7 +18,7 @@ import layout, textDisplay, pacman, gridworld
 import time
 from util import Counter, TimeoutFunction, FixedRandom
 from collections import defaultdict
-from pprint import PrettyPrinter
+from pprint(import PrettyPrinter)
 from hashlib import sha1
 pp = PrettyPrinter()
 VERBOSE = False
@@ -686,7 +686,7 @@ class EvalAgentTest(testClasses.TestCase):
             if minimum == None and len(thresholds)==0:
                 continue
 
-            # print passed, points, value, minimum, thresholds, name
+            # print(passed, points, value, minimum, thresholds, name)
             totalPoints += points
             if not passed:
                 assert points == 0

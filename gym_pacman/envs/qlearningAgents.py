@@ -181,6 +181,6 @@ class ApproximateQAgent(PacmanQAgent):
 
         # did we finish training?
         if self.episodesSoFar == self.numTraining:
-            # you might want to print your weights here for debugging
+            # you might want to print(your weights here for debugging)
             "*** YOUR CODE HERE ***"
             pass
