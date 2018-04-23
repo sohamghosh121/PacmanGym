@@ -67,6 +67,7 @@ def begin_graphics(width=640, height=480, color=formatColor(0, 0, 0), title=None
     if _root_window is not None:
         # Lose the window.
         _root_window.destroy()
+    
 
     # Save the canvas size parameters
     _canvas_xs, _canvas_ys = width - 1, height - 1
@@ -76,14 +77,22 @@ def begin_graphics(width=640, height=480, color=formatColor(0, 0, 0), title=None
     # Create the root window
     _root_window = Tkinter.Tk()
     d_o_e = _root_window.dooneevent
+    _root_window.overrideredirect(1)
     _root_window.protocol('WM_DELETE_WINDOW', _destroy_window)
     # _root_window.title(title or 'Graphics Window')
     _root_window.resizable(0, 0)
 
     # Create the canvas object
     try:
-        _canvas = Tkinter.Canvas(_root_window, width=width, height=height, bg='black')
-        _canvas.pack()
+        _canvas = Tkinter.Canvas(_root_window,
+            width=width,
+            height=height,
+            bd=0.0,
+            bg='#000000',
+            highlightbackground='#000000',
+            highlightcolor='#000000',
+            highlightthickness=0)
+        _canvas.pack(fill=Tkinter.BOTH, expand=1)
         draw_background()
         _canvas.update()
     except:
@@ -155,6 +164,8 @@ def circle(pos, r, outlineColor, fillColor, endpoints=None, style='pieslice', wi
 def image(filename="/tmp/pacman-frame"):
     ps = _canvas.postscript(colormode='color')
     im = Image.open(io.BytesIO(ps.encode('utf-8')))
+    w, h = im.size
+    im = im.crop((1,1,w-1,h-1))
     return im
 
 

@@ -272,7 +272,7 @@ class PacmanGraphics:
         begin_graphics(screen_width,
                        screen_height,
                        BACKGROUND_COLOR,
-                       "CS188 Pacman")
+                       "Pacman Gym")
         return screen_width, screen_height
 
     def drawPacman(self, pacman, index):

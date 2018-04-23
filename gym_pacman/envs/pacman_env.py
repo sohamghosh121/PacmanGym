@@ -48,7 +48,7 @@ class PacmanEnv(gym.Env):
                 int(screen_width),
                 3), dtype=np.uint8)
 
-    def chooseLayout(self, chosenLayout=None, no_ghosts=False):
+    def chooseLayout(self, chosenLayout=None, no_ghosts=True):
         if chosenLayout is None:
             if not no_ghosts:
                 chosenLayout = np.random.choice(self.layouts)

@@ -6,7 +6,7 @@ e = gym.make('BerkeleyPacmanPO-v0')
 done = False
 i = 0
 print(e.observation_space)
-e.reset(layout='contestClassic')
+e.reset(layout='contestClassic_noGhosts')
 while not done:
     i += 1
     s_, r, done, info = e.step(e.action_space.sample())
