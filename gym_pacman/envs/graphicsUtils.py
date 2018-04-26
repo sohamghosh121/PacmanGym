@@ -123,7 +123,6 @@ def end_graphics():
         _root_window = None
         _canvas = None
         _mouse_enabled = 0
-        _clear_keys()
 
 def clear_screen(background=None):
     global _canvas_x, _canvas_y

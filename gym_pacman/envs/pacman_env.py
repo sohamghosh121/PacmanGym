@@ -31,6 +31,7 @@ class PacmanEnv(gym.Env):
     noGhost_layouts = [l + '_noGhosts' for l in layouts]
 
     MAX_MAZE_SIZE = (45, 45)
+    num_envs = 1
 
     def __init__(self):
         self.chooseLayout()
@@ -39,6 +40,7 @@ class PacmanEnv(gym.Env):
         self.setObservationSpace()
         self._action_set = range(len(PACMAN_ACTIONS))
         self.location = None
+        self.viewer = None
         self.reset()
 
     def setObservationSpace(self):
@@ -60,7 +62,8 @@ class PacmanEnv(gym.Env):
         self.maze_size = (self.layout.width, self.layout.height)
 
     def reset(self, layout=None):
-         # get new layout
+        # get new layout
+        self.step_counter = 0
         self.chooseLayout(layout)
         self.setObservationSpace()
 
@@ -85,6 +88,16 @@ class PacmanEnv(gym.Env):
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history = [self.orientation]
         self.illegal_move_counter = 0
+
+        self.initial_info = {
+            'past_loc': [self.location_history[-1]],
+            'curr_loc': [self.location_history[-1]],
+            'past_orientation': [[self.orientation_history[-1]]],
+            'curr_orientation': [[self.orientation_history[-1]]],
+            'illegal_move_counter': [self.illegal_move_counter],
+            'step_counter': [[0]]
+        }
+
         return self._get_image()
 
     def step(self, action):
@@ -112,12 +125,14 @@ class PacmanEnv(gym.Env):
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history.append(self.orientation)
 
+        self.step_counter += 1 
         info = {
-            'past_loc': self.location_history[-2],
-            'curr_loc': self.location_history[-1],
-            'past_orientation': self.orientation_history[-2],
-            'curr_orientation': self.orientation_history[-1],
-            'illegal_move_counter': self.illegal_move_counter
+            'past_loc': [self.location_history[-2]],
+            'curr_loc': [self.location_history[-1]],
+            'past_orientation': [[self.orientation_history[-2]]],
+            'curr_orientation': [[self.orientation_history[-1]]],
+            'illegal_move_counter': [self.illegal_move_counter],
+            'step_counter': [[self.step_counter]]
         }
 
         return self._get_image(), reward, done, info
@@ -141,9 +156,8 @@ class PacmanEnv(gym.Env):
             return self.viewer.isopen
 
     def close(self):
-        # implement code here to do closing stuff
+        # TODO: implement code here to do closing stuff
         self.display.finish()
-        vdisplay.stop()
 
 
 class PartiallyObservablePacmanEnv(PacmanEnv):
