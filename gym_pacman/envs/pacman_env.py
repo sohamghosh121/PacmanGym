@@ -103,8 +103,8 @@ class PacmanEnv(gym.Env):
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
             'step_counter': [[0]],
-            'r': self.cum_reward,
-            'l': self.step_counter
+            'r': [self.cum_reward],
+            'l': [self.step_counter]
         }
 
         return self._get_image()
@@ -120,8 +120,8 @@ class PacmanEnv(gym.Env):
                 'curr_orientation': [[self.orientation_history[-1]]],
                 'illegal_move_counter': [self.illegal_move_counter],
                 'step_counter': [[self.step_counter]],
-                'r': self.cum_reward,
-                'l': self.step_counter
+                'r': [self.cum_reward],
+                'l': [self.step_counter]
             }
 
 
@@ -156,8 +156,10 @@ class PacmanEnv(gym.Env):
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
             'step_counter': [[self.step_counter]],
-            'r': self.cum_reward,
-            'l': self.step_counter
+            'episode': [{
+                'r': self.cum_reward,
+                'l': self.step_counter
+            }]
         }
 
         if self.step_counter >= MAX_EP_LENGTH:
