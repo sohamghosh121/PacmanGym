@@ -20,6 +20,7 @@ import time
 import types
 import tkinter as Tkinter
 import io
+from time import sleep
 
 from PIL import Image, ImageDraw
 
@@ -119,9 +120,10 @@ class GraphicsUtils:
         self.polygon(corners, self._bg_color, fillColor=self._bg_color, filled=True, smoothed=False)
 
     def _destroy_window(self, event=None):
-        sys.exit(0)
-        self._root_window.destroy()
-        self._root_window = None
+        pass
+        # sys.exit(0)
+        # self._root_window.destroy()
+        # self._root_window = None
         # print("DESTROY")
 
     def end_graphics(self):

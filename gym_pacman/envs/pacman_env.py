@@ -23,6 +23,8 @@ PACMAN_ACTIONS = ['North', 'South', 'East', 'West', 'Stop']
 PACMAN_DIRECTIONS = ['North', 'South', 'East', 'West']
 ROTATION_ANGLES = [0, 180, 90, 270]
 
+MAX_EP_LENGTH = 100
+
 class PacmanEnv(gym.Env):
     layouts = [
         'capsuleClassic', 'contestClassic', 'mediumClassic', 'mediumGrid', 'minimaxClassic', 'openClassic', 'originalClassic', 'smallClassic', 'capsuleClassic', 'smallGrid', 'testClassic', 'trappedClassic', 'trickyClassic'
@@ -41,6 +43,7 @@ class PacmanEnv(gym.Env):
         self._action_set = range(len(PACMAN_ACTIONS))
         self.location = None
         self.viewer = None
+        self.done = False
         self.reset()
 
     def setObservationSpace(self):
@@ -64,6 +67,8 @@ class PacmanEnv(gym.Env):
     def reset(self, layout=None):
         # get new layout
         self.step_counter = 0
+        self.cum_reward = 0
+        self.done = False
         self.chooseLayout(layout)
         self.setObservationSpace()
 
@@ -89,19 +94,37 @@ class PacmanEnv(gym.Env):
         self.orientation_history = [self.orientation]
         self.illegal_move_counter = 0
 
+        self.cum_reward = 0
+
         self.initial_info = {
             'past_loc': [self.location_history[-1]],
             'curr_loc': [self.location_history[-1]],
             'past_orientation': [[self.orientation_history[-1]]],
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
-            'step_counter': [[0]]
+            'step_counter': [[0]],
+            'r': self.cum_reward,
+            'l': self.step_counter
         }
 
         return self._get_image()
 
     def step(self, action):
         # implement code here to take an action
+        if self.step_counter >= MAX_EP_LENGTH or self.done:
+            self.step_counter += 1
+            return np.zeros(self.observation_space.shape), 0.0, True, {
+                'past_loc': [self.location_history[-2]],
+                'curr_loc': [self.location_history[-1]],
+                'past_orientation': [[self.orientation_history[-2]]],
+                'curr_orientation': [[self.orientation_history[-1]]],
+                'illegal_move_counter': [self.illegal_move_counter],
+                'step_counter': [[self.step_counter]],
+                'r': self.cum_reward,
+                'l': self.step_counter
+            }
+
+
         pacman_action = PACMAN_ACTIONS[action]
 
         legal_actions = self.game.state.getLegalPacmanActions()
@@ -112,7 +135,7 @@ class PacmanEnv(gym.Env):
             pacman_action = 'Stop' # Stop is always legal
 
         reward = self.game.step(pacman_action)
-
+        self.cum_reward += reward
         # reward shaping for illegal actions
         if illegal_action:
             reward -= 10
@@ -132,17 +155,26 @@ class PacmanEnv(gym.Env):
             'past_orientation': [[self.orientation_history[-2]]],
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
-            'step_counter': [[self.step_counter]]
+            'step_counter': [[self.step_counter]],
+            'r': self.cum_reward,
+            'l': self.step_counter
         }
 
+        if self.step_counter >= MAX_EP_LENGTH:
+            done = True
+
+        self.done = done
         return self._get_image(), reward, done, info
 
     def get_action_meanings(self):
         return [PACMAN_ACTIONS[i] for i in self._action_set]
 
     def _get_image(self):
-        image = self.display.image
-        return np.array(image)
+        if self.step_counter < MAX_EP_LENGTH or self.done:
+            return np.zeros(self.observation_space.shape, dtype=np.uint8)
+        else:
+            image = self.display.image
+            return np.array(image)
 
     def render(self, mode='human'):
         img = self._get_image()
@@ -157,7 +189,12 @@ class PacmanEnv(gym.Env):
 
     def close(self):
         # TODO: implement code here to do closing stuff
+        if self.viewer is not None:
+            self.viewer.close()
         self.display.finish()
+
+    def __del__(self):
+        self.close()
 
 
 class PartiallyObservablePacmanEnv(PacmanEnv):
@@ -178,7 +215,8 @@ class PartiallyObservablePacmanEnv(PacmanEnv):
 
 
         extent = tuple([int(e) for e in extent])
-        image = image.crop(extent).resize((84, 84))
+        self.image_sz = (84,84)
+        image = image.crop(extent).resize(self.image_sz)
         return np.array(image)
 
     def setObservationSpace(self):
