@@ -12,7 +12,7 @@ from .layout import getLayout, getRandomLayout
 from .ghostAgents import DirectionalGhost
 from .pacmanAgents import OpenAIAgent
 
-
+from gym.utils import seeding
 
 DEFAULT_GHOST_TYPE = 'DirectionalGhost'
 
@@ -36,15 +36,14 @@ class PacmanEnv(gym.Env):
     num_envs = 1
 
     def __init__(self):
-        self.chooseLayout()
         self.action_space = spaces.Discrete(4) # up, down, left right
         self.display = PacmanGraphics(1.0)
-        self.setObservationSpace()
         self._action_set = range(len(PACMAN_ACTIONS))
         self.location = None
         self.viewer = None
         self.done = False
-        self.reset()
+        self.layout = None
+        self.np_random = None
 
     def setObservationSpace(self):
         screen_width, screen_height = self.display.calculate_screen_dimensions(self.layout.width,   self.layout.height)
@@ -55,27 +54,38 @@ class PacmanEnv(gym.Env):
 
     def chooseLayout(self, randomLayout=True, layout_params=None,
         chosenLayout=None, no_ghosts=True):
+
         if randomLayout:
             if layout_params is None:
                 layout_params = {}
-            self.layout = getRandomLayout(layout_params)
+            self.layout = getRandomLayout(layout_params, self.np_random)
         else:
             if chosenLayout is None:
                 if not no_ghosts:
-                    chosenLayout = np.random.choice(self.layouts)
+                    chosenLayout = self.np_random.choice(self.layouts)
                 else:
-                    chosenLayout = np.random.choice(self.noGhost_layouts)
+                    chosenLayout = self.np_random.choice(self.noGhost_layouts)
             self.chosen_layout = chosenLayout
             print("Chose layout", chosenLayout)
             self.layout = getLayout(chosenLayout)
         self.maze_size = (self.layout.width, self.layout.height)
 
+    def seed(self, seed=None):
+        if self.np_random is None:
+            self.np_random, seed = seeding.np_random(seed)
+        self.chooseLayout(randomLayout=True)
+        return [seed]
+
     def reset(self, layout=None):
         # get new layout
+        if self.layout is None:
+            self.chooseLayout(randomLayout=True)
+        else:
+            pass
         self.step_counter = 0
         self.cum_reward = 0
         self.done = False
-        self.chooseLayout(randomLayout=True)
+        
         self.setObservationSpace()
 
         # we don't want super powerful ghosts

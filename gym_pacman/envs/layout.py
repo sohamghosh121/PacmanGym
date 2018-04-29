@@ -147,7 +147,7 @@ def getLayout(name, back = 0):
 
 
 
-def generateMaze(maze_size, decimation, start_pos=(1,1)):
+def generateMaze(maze_size, decimation, start_pos,np_random):
     # credits: Emilio Parisotto
     maze = np.zeros((maze_size, maze_size))
 
@@ -178,28 +178,28 @@ def generateMaze(maze_size, decimation, start_pos=(1,1)):
         choices.append(((pos[0]  , pos[1]-2), ( 0,-1)))
         choices.append(((pos[0]+2, pos[1]  ), ( 1, 0)))
 
-        perm = np.random.permutation(np.array(range(4)))
+        perm = np_random.permutation(np.array(range(4)))
         for i in range(4):
             choice = choices[perm[i]]
             add_stack(choice[0], choice[1])
 
     for y in range(1, maze_size-1):
         for x in range(1, maze_size-1):
-            if np.random.uniform() < decimation:
+            if np_random.uniform() < decimation:
                 maze[y][x] = 1.
 
     return maze
 
-def getRandomLayout(layout_params):
+def getRandomLayout(layout_params, np_random):
     # no empty
     size = layout_params.get('size', 7)
     nghosts = layout_params.get('nghosts', 1)
-    start_x, start_y = np.random.randint(1, size - 1), np.random.randint(1, size - 1)
+    start_x, start_y = np_random.randint(1, size - 1), np_random.randint(1, size - 1)
 
     WALL, FOOD, PACMAN, GHOST = 0, 1, 2, 3
     ITEM_REPR_STR = '%.PG'
 
-    maze = generateMaze(size, 0.3, (start_x, start_y)).astype(np.int)
+    maze = generateMaze(size, 0.3, (start_x, start_y), np_random).astype(np.int)
     # maze = np.zeros((size, size), dtype=np.int)
     # maze[1:size-1,1:size-1] = maze_
     maze[start_y, start_x] = PACMAN
@@ -212,7 +212,7 @@ def getRandomLayout(layout_params):
     empty_positions = empty_positions[:, filter_ix]
 
     if empty_positions.shape[1] > 0: # if found a proper place to put ghost
-        ghost_position_ix = np.random.choice(empty_positions.shape[1], nghosts)
+        ghost_position_ix = np_random.choice(empty_positions.shape[1], nghosts)
         for gix in ghost_position_ix:
             ghost_pos_y, ghost_pos_x = empty_positions[0][gix], empty_positions[1][gix]
             maze[ghost_pos_y, ghost_pos_x] = GHOST

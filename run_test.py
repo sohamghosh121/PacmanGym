@@ -1,11 +1,14 @@
 from PIL import Image
 import gym
 import gym_pacman
-env = gym.make('BerkeleyPacmanPO-v0')
 import time
+
+env = gym.make('BerkeleyPacmanPO-v0')
+env.seed(1)
+
+
 done = False
 i = 0
-env.reset()
 while True:
     done = False
     env.reset()
