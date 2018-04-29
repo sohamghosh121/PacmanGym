@@ -16,6 +16,7 @@ from .util import manhattanDistance
 from .game import Grid
 import os
 import random
+import numpy as np
 
 VISIBILITY_MATRIX_CACHE = {}
 
@@ -142,6 +143,85 @@ def getLayout(name, back = 0):
         layout = getLayout(name, back -1)
         os.chdir(curdir)
     return layout
+
+
+
+
+def generateMaze(maze_size, decimation, start_pos=(1,1)):
+    # credits: Emilio Parisotto
+    maze = np.zeros((maze_size, maze_size))
+
+    stack = [((start_pos[0], start_pos[1]), (0, 0))]
+    def add_stack(next_pos, next_dir):
+        if (next_pos[0] <= 0) or (next_pos[0] >= maze_size - 1):
+            return
+        if (next_pos[1] <= 0) or (next_pos[1] >= maze_size - 1):
+            return
+        if maze[next_pos[0]][next_pos[1]] == 0.:
+            stack.append((next_pos, next_dir))
+
+    while len(stack) > 0:
+        pos, prev_dir = stack.pop()
+        # Has this not been filled since being added?                                                            
+        if maze[pos[0]][pos[1]] == 1.:
+            continue
+
+        # Fill in this point + break down wall from previous position                                            
+        maze[pos[0]][pos[1]] = 1.
+        from_y = pos[0]-prev_dir[0]
+        from_x = pos[1]-prev_dir[1]
+        maze[from_y][from_x] = 1.
+
+        choices = []
+        choices.append(((pos[0]-2, pos[1]  ), (-1, 0)))
+        choices.append(((pos[0]  , pos[1]+2), ( 0, 1)))
+        choices.append(((pos[0]  , pos[1]-2), ( 0,-1)))
+        choices.append(((pos[0]+2, pos[1]  ), ( 1, 0)))
+
+        perm = np.random.permutation(np.array(range(4)))
+        for i in range(4):
+            choice = choices[perm[i]]
+            add_stack(choice[0], choice[1])
+
+    for y in range(1, maze_size-1):
+        for x in range(1, maze_size-1):
+            if np.random.uniform() < decimation:
+                maze[y][x] = 1.
+
+    return maze
+
+def getRandomLayout(layout_params):
+    # no empty
+    size = layout_params.get('size', 7)
+    nghosts = layout_params.get('nghosts', 1)
+    start_x, start_y = np.random.randint(1, size - 1), np.random.randint(1, size - 1)
+
+    WALL, FOOD, PACMAN, GHOST = 0, 1, 2, 3
+    ITEM_REPR_STR = '%.PG'
+
+    maze = generateMaze(size, 0.3, (start_x, start_y)).astype(np.int)
+    # maze = np.zeros((size, size), dtype=np.int)
+    # maze[1:size-1,1:size-1] = maze_
+    maze[start_y, start_x] = PACMAN
+
+    empty_positions = np.where(maze == FOOD)
+
+    # filter out positions within 2 steps of pacman
+    empty_positions = np.vstack(empty_positions)
+    filter_ix = np.where(np.sum(np.abs(empty_positions - np.expand_dims([start_y, start_x], 1)), axis=0) > 2)[0]
+    empty_positions = empty_positions[:, filter_ix]
+
+    if empty_positions.shape[1] > 0: # if found a proper place to put ghost
+        ghost_position_ix = np.random.choice(empty_positions.shape[1], nghosts)
+        for gix in ghost_position_ix:
+            ghost_pos_y, ghost_pos_x = empty_positions[0][gix], empty_positions[1][gix]
+            maze[ghost_pos_y, ghost_pos_x] = GHOST
+        
+    maze_str = []
+    for i in range(maze.shape[0]):
+        line = ''.join([ITEM_REPR_STR[m] for m in maze[i]])
+        maze_str.append(line)
+    return Layout(maze_str)
 
 def tryToLoad(fullname):
     if(not os.path.exists(fullname)): return None

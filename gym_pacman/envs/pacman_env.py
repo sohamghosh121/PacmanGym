@@ -7,7 +7,7 @@ from .graphicsDisplay import PacmanGraphics, DEFAULT_GRID_SIZE
 
 from .game import Actions
 from .pacman import ClassicGameRules
-from .layout import getLayout
+from .layout import getLayout, getRandomLayout
 
 from .ghostAgents import DirectionalGhost
 from .pacmanAgents import OpenAIAgent
@@ -53,15 +53,21 @@ class PacmanEnv(gym.Env):
                 int(screen_width),
                 3), dtype=np.uint8)
 
-    def chooseLayout(self, chosenLayout=None, no_ghosts=True):
-        if chosenLayout is None:
-            if not no_ghosts:
-                chosenLayout = np.random.choice(self.layouts)
-            else:
-                chosenLayout = np.random.choice(self.noGhost_layouts)
-        self.chosen_layout = chosenLayout
-        print("Chose layout", chosenLayout)
-        self.layout = getLayout(chosenLayout)
+    def chooseLayout(self, randomLayout=True, layout_params=None,
+        chosenLayout=None, no_ghosts=True):
+        if randomLayout:
+            if layout_params is None:
+                layout_params = {}
+            self.layout = getRandomLayout(layout_params)
+        else:
+            if chosenLayout is None:
+                if not no_ghosts:
+                    chosenLayout = np.random.choice(self.layouts)
+                else:
+                    chosenLayout = np.random.choice(self.noGhost_layouts)
+            self.chosen_layout = chosenLayout
+            print("Chose layout", chosenLayout)
+            self.layout = getLayout(chosenLayout)
         self.maze_size = (self.layout.width, self.layout.height)
 
     def reset(self, layout=None):
@@ -69,10 +75,11 @@ class PacmanEnv(gym.Env):
         self.step_counter = 0
         self.cum_reward = 0
         self.done = False
-        self.chooseLayout(layout)
+        self.chooseLayout(randomLayout=True)
         self.setObservationSpace()
 
-        self.ghosts = [DirectionalGhost( i+1 ) for i in range(MAX_GHOSTS)]
+        # we don't want super powerful ghosts
+        self.ghosts = [DirectionalGhost( i+1, prob_attack=0.2, prob_scaredFlee=0.2) for i in range(MAX_GHOSTS)]
 
         # this agent is just a placeholder for graphics to work
         self.pacman = OpenAIAgent()

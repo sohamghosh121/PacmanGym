@@ -339,7 +339,7 @@ class PacmanGraphics:
             coords.append((x*self.gridSize*GHOST_SIZE + screen_x, y*self.gridSize*GHOST_SIZE + screen_y))
 
         colour = self.getGhostColor(ghost, agentIndex)
-        body = polygon(coords, colour, filled = 1)
+        body = self.graphicsUtils.polygon(coords, colour, filled = 1)
         WHITE = formatColor(1.0, 1.0, 1.0)
         BLACK = formatColor(0.0, 0.0, 0.0)
 
@@ -353,10 +353,10 @@ class PacmanGraphics:
             dx = 0.2
         if dir == 'West':
             dx = -0.2
-        leftEye = circle((screen_x+self.gridSize*GHOST_SIZE*(-0.3+dx/1.5), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy/1.5)), self.gridSize*GHOST_SIZE*0.2, WHITE, WHITE)
-        rightEye = circle((screen_x+self.gridSize*GHOST_SIZE*(0.3+dx/1.5), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy/1.5)), self.gridSize*GHOST_SIZE*0.2, WHITE, WHITE)
-        leftPupil = circle((screen_x+self.gridSize*GHOST_SIZE*(-0.3+dx), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy)), self.gridSize*GHOST_SIZE*0.08, BLACK, BLACK)
-        rightPupil = circle((screen_x+self.gridSize*GHOST_SIZE*(0.3+dx), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy)), self.gridSize*GHOST_SIZE*0.08, BLACK, BLACK)
+        leftEye = self.graphicsUtils.circle((screen_x+self.gridSize*GHOST_SIZE*(-0.3+dx/1.5), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy/1.5)), self.gridSize*GHOST_SIZE*0.2, WHITE, WHITE)
+        rightEye = self.graphicsUtils.circle((screen_x+self.gridSize*GHOST_SIZE*(0.3+dx/1.5), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy/1.5)), self.gridSize*GHOST_SIZE*0.2, WHITE, WHITE)
+        leftPupil = self.graphicsUtils.circle((screen_x+self.gridSize*GHOST_SIZE*(-0.3+dx), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy)), self.gridSize*GHOST_SIZE*0.08, BLACK, BLACK)
+        rightPupil = self.graphicsUtils.circle((screen_x+self.gridSize*GHOST_SIZE*(0.3+dx), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy)), self.gridSize*GHOST_SIZE*0.08, BLACK, BLACK)
         ghostImageParts = []
         ghostImageParts.append(body)
         ghostImageParts.append(leftEye)
@@ -378,10 +378,10 @@ class PacmanGraphics:
             dx = 0.2
         if dir == 'West':
             dx = -0.2
-        moveCircle(eyes[0],(screen_x+self.gridSize*GHOST_SIZE*(-0.3+dx/1.5), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy/1.5)), self.gridSize*GHOST_SIZE*0.2)
-        moveCircle(eyes[1],(screen_x+self.gridSize*GHOST_SIZE*(0.3+dx/1.5), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy/1.5)), self.gridSize*GHOST_SIZE*0.2)
-        moveCircle(eyes[2],(screen_x+self.gridSize*GHOST_SIZE*(-0.3+dx), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy)), self.gridSize*GHOST_SIZE*0.08)
-        moveCircle(eyes[3],(screen_x+self.gridSize*GHOST_SIZE*(0.3+dx), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy)), self.gridSize*GHOST_SIZE*0.08)
+        self.graphicsUtils.moveCircle(eyes[0],(screen_x+self.gridSize*GHOST_SIZE*(-0.3+dx/1.5), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy/1.5)), self.gridSize*GHOST_SIZE*0.2)
+        self.graphicsUtils.moveCircle(eyes[1],(screen_x+self.gridSize*GHOST_SIZE*(0.3+dx/1.5), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy/1.5)), self.gridSize*GHOST_SIZE*0.2)
+        self.graphicsUtils.moveCircle(eyes[2],(screen_x+self.gridSize*GHOST_SIZE*(-0.3+dx), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy)), self.gridSize*GHOST_SIZE*0.08)
+        self.graphicsUtils.moveCircle(eyes[3],(screen_x+self.gridSize*GHOST_SIZE*(0.3+dx), screen_y-self.gridSize*GHOST_SIZE*(0.3-dy)), self.gridSize*GHOST_SIZE*0.08)
 
     def moveGhost(self, ghost, ghostIndex, prevGhost, ghostImageParts):
         old_x, old_y = self.to_screen(self.getPosition(prevGhost))
@@ -389,14 +389,14 @@ class PacmanGraphics:
         delta = new_x - old_x, new_y - old_y
 
         for ghostImagePart in ghostImageParts:
-            move_by(ghostImagePart, delta)
+            self.graphicsUtils.move_by(ghostImagePart, delta)
         self.graphicsUtils.refresh()
 
         if ghost.scaredTimer > 0:
             color = SCARED_COLOR
         else:
             color = GHOST_COLORS[ghostIndex]
-        edit(ghostImageParts[0], ('fill', color), ('outline', color))
+        self.graphicsUtils.edit(ghostImageParts[0], ('fill', color), ('outline', color))
         self.moveEyes(self.getPosition(ghost), self.getDirection(ghost), ghostImageParts[-4:])
         self.graphicsUtils.refresh()
 
