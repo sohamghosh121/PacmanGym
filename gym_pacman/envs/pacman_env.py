@@ -58,6 +58,7 @@ class PacmanEnv(gym.Env):
         if randomLayout:
             if layout_params is None:
                 layout_params = {}
+            layout_params['nghosts'] = 0
             self.layout = getRandomLayout(layout_params, self.np_random)
         else:
             if chosenLayout is None:
@@ -78,14 +79,15 @@ class PacmanEnv(gym.Env):
 
     def reset(self, layout=None):
         # get new layout
-        if self.layout is None:
-            self.chooseLayout(randomLayout=True)
-        else:
-            pass
+        #if self.layout is None:
+        #    self.chooseLayout(randomLayout=True)
+
+        self.chooseLayout(randomLayout=True)
+
         self.step_counter = 0
         self.cum_reward = 0
         self.done = False
-        
+
         self.setObservationSpace()
 
         # we don't want super powerful ghosts
@@ -165,7 +167,7 @@ class PacmanEnv(gym.Env):
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history.append(self.orientation)
 
-        self.step_counter += 1 
+        self.step_counter += 1
         info = {
             'past_loc': [self.location_history[-2]],
             'curr_loc': [self.location_history[-1]],
@@ -217,7 +219,8 @@ class PacmanEnv(gym.Env):
 
 
 class PartiallyObservablePacmanEnv(PacmanEnv):
-
+    observation_space = spaces.Box(low=0, high=255,
+            shape=(84, 84, 3), dtype=np.uint8)
     # just change the get image function
     def _get_image(self):
         # get x, y
