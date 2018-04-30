@@ -122,8 +122,6 @@ class PacmanEnv(gym.Env):
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
             'step_counter': [[0]],
-            'r': [self.cum_reward],
-            'l': [self.step_counter]
         }
 
         return self._get_image()
@@ -140,7 +138,11 @@ class PacmanEnv(gym.Env):
                 'illegal_move_counter': [self.illegal_move_counter],
                 'step_counter': [[self.step_counter]],
                 'r': [self.cum_reward],
-                'l': [self.step_counter]
+                'l': [self.step_counter],
+                'episode': [{
+                    'r': self.cum_reward,
+                    'l': self.step_counter
+                }]
             }
 
 
@@ -175,6 +177,7 @@ class PacmanEnv(gym.Env):
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
             'step_counter': [[self.step_counter]],
+            'episode': [None]
         }
 
         if self.step_counter >= MAX_EP_LENGTH:
@@ -183,11 +186,10 @@ class PacmanEnv(gym.Env):
         self.done = done
 
         if self.done: # only if done, send 'episode' info
-            info['episode']: [{
+            info['episode'] = [{
                 'r': self.cum_reward,
                 'l': self.step_counter
             }]
-
         return self._get_image(), reward, done, info
 
     def get_action_meanings(self):
