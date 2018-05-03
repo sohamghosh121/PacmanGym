@@ -14,6 +14,10 @@ from .pacmanAgents import OpenAIAgent
 
 from gym.utils import seeding
 
+import json
+import os
+
+
 DEFAULT_GHOST_TYPE = 'DirectionalGhost'
 
 MAX_GHOSTS = 5
@@ -25,6 +29,17 @@ ROTATION_ANGLES = [0, 180, 90, 270]
 
 MAX_EP_LENGTH = 100
 
+import os
+fdir = '/'.join(os.path.split(__file__)[:-1])
+print(fdir)
+layout_params = json.load(open(fdir + '/../../layout_params.json'))
+
+print("Layout parameters")
+print("------------------")
+for k in layout_params:
+    print(k,":",layout_params[k])
+print("------------------")
+
 class PacmanEnv(gym.Env):
     layouts = [
         'capsuleClassic', 'contestClassic', 'mediumClassic', 'mediumGrid', 'minimaxClassic', 'openClassic', 'originalClassic', 'smallClassic', 'capsuleClassic', 'smallGrid', 'testClassic', 'trappedClassic', 'trickyClassic'
@@ -32,8 +47,11 @@ class PacmanEnv(gym.Env):
 
     noGhost_layouts = [l + '_noGhosts' for l in layouts]
 
-    MAX_MAZE_SIZE = (45, 45)
+    MAX_MAZE_SIZE = (7, 7)
     num_envs = 1
+
+    observation_space = spaces.Box(low=0, high=255,
+            shape=(84, 84, 3), dtype=np.uint8)
 
     def __init__(self):
         self.action_space = spaces.Discrete(4) # up, down, left right
@@ -52,13 +70,10 @@ class PacmanEnv(gym.Env):
                 int(screen_width),
                 3), dtype=np.uint8)
 
-    def chooseLayout(self, randomLayout=True, layout_params=None,
+    def chooseLayout(self, randomLayout=True,
         chosenLayout=None, no_ghosts=True):
 
         if randomLayout:
-            if layout_params is None:
-                layout_params = {}
-            layout_params['nghosts'] = 1
             self.layout = getRandomLayout(layout_params, self.np_random)
         else:
             if chosenLayout is None:
@@ -109,6 +124,7 @@ class PacmanEnv(gym.Env):
 
         self.location = self.game.state.data.agentStates[0].getPosition()
         self.ghostLocations = [a.getPosition() for a in self.game.state.data.agentStates[1:]]
+        self.ghostInFrame = any([np.sum(np.array(g) - np.array(self.location)) <= 2 for g in self.ghostLocations])
         self.location_history = [self.location]
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history = [self.orientation]
@@ -123,6 +139,7 @@ class PacmanEnv(gym.Env):
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
             'ghost_positions': [self.ghostLocations],
+            'ghostInFrame': [self.ghostInFrame],
             'step_counter': [[0]],
         }
 
@@ -199,12 +216,23 @@ class PacmanEnv(gym.Env):
     def get_action_meanings(self):
         return [PACMAN_ACTIONS[i] for i in self._action_set]
 
+    # just change the get image function
     def _get_image(self):
-        if self.step_counter < MAX_EP_LENGTH or self.done:
-            return np.zeros(self.observation_space.shape, dtype=np.uint8)
-        else:
-            image = self.display.image
-            return np.array(image)
+        # get x, y
+        image = self.display.image
+
+        w, h = image.size
+        DEFAULT_GRID_SIZE_X, DEFAULT_GRID_SIZE_Y = w / float(self.layout.width), h / float(self.layout.height)
+
+        extent = [
+            DEFAULT_GRID_SIZE_X *  (self.location[0] - 1.5),
+            DEFAULT_GRID_SIZE_Y *  (self.layout.height - (self.location[1] + 2.5)),
+            DEFAULT_GRID_SIZE_X *  (self.location[0] + 2.5),
+            DEFAULT_GRID_SIZE_Y *  (self.layout.height - (self.location[1] - 1.5))]
+        extent = tuple([int(e) for e in extent])
+        self.image_sz = (84,84)
+        image = image.crop(extent).resize(self.image_sz)
+        return np.array(image)
 
     def render(self, mode='human'):
         img = self._get_image()
@@ -225,32 +253,3 @@ class PacmanEnv(gym.Env):
 
     def __del__(self):
         self.close()
-
-
-class PartiallyObservablePacmanEnv(PacmanEnv):
-    observation_space = spaces.Box(low=0, high=255,
-            shape=(84, 84, 3), dtype=np.uint8)
-    # just change the get image function
-    def _get_image(self):
-        # get x, y
-        image = self.display.image
-
-        w, h = image.size
-        DEFAULT_GRID_SIZE_X, DEFAULT_GRID_SIZE_Y = w / float(self.layout.width), h / float(self.layout.height)
-
-        extent = [
-            DEFAULT_GRID_SIZE_X *  (self.location[0] - 1.5),
-            DEFAULT_GRID_SIZE_Y *  (self.layout.height - (self.location[1] + 2.5)),
-            DEFAULT_GRID_SIZE_X *  (self.location[0] + 2.5),
-            DEFAULT_GRID_SIZE_Y *  (self.layout.height - (self.location[1] - 1.5))]
-
-
-        extent = tuple([int(e) for e in extent])
-        self.image_sz = (84,84)
-        image = image.crop(extent).resize(self.image_sz)
-        return np.array(image)
-
-    def setObservationSpace(self):
-        self.observation_space = spaces.Box(low=0, high=255,
-            shape=(84, 84, 3), dtype=np.uint8)
-

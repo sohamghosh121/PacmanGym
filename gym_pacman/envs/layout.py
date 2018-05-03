@@ -194,17 +194,31 @@ def getRandomLayout(layout_params, np_random):
     # no empty
     size = layout_params.get('size', 7)
     nghosts = layout_params.get('nghosts', 1)
+    npellets = layout_params.get('npellets', 1)
+    food_proportion = layout_params.get('food_proportion', 1.0)
+    by_proportion = layout_params.get('by_proportion', True)
+
     start_x, start_y = np_random.randint(1, size - 1), np_random.randint(1, size - 1)
 
-    WALL, FOOD, PACMAN, GHOST = 0, 1, 2, 3
-    ITEM_REPR_STR = '%.PG'
+    WALL, EMPTY, PACMAN, GHOST, FOOD = 0, 1, 2, 3, 4
+    ITEM_REPR_STR = '% PG.'
 
     maze = generateMaze(size, 0.3, (start_x, start_y), np_random).astype(np.int)
     # maze = np.zeros((size, size), dtype=np.int)
     # maze[1:size-1,1:size-1] = maze_
     maze[start_y, start_x] = PACMAN
 
-    empty_positions = np.where(maze == FOOD)
+    empty_positions = np.where(maze == EMPTY)
+    if by_proportion:
+        for ix in range(empty_positions[0].shape[0]):
+            if np.random.rand() <= food_proportion:
+                maze[empty_positions[0][ix], empty_positions[1][ix]] = FOOD
+    else:
+        food_positions = np.random.choice(np.arange(empty_positions[0].shape[0]), npellets)
+        for pos in food_positions:
+            maze[empty_positions[0][pos], empty_positions[1][pos]] = FOOD
+
+    empty_positions = np.where(maze == EMPTY)
 
     # filter out positions within 2 steps of pacman
     empty_positions = np.vstack(empty_positions)
