@@ -15,6 +15,6 @@ while True:
     while not done:
         i += 1
         s_, r, done, info = env.step(env.action_space.sample())
-        print(r)
+        print(info)
         env.render()
         

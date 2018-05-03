@@ -58,7 +58,7 @@ class PacmanEnv(gym.Env):
         if randomLayout:
             if layout_params is None:
                 layout_params = {}
-            layout_params['nghosts'] = 0
+            layout_params['nghosts'] = 1
             self.layout = getRandomLayout(layout_params, self.np_random)
         else:
             if chosenLayout is None:
@@ -108,6 +108,7 @@ class PacmanEnv(gym.Env):
         self.display.updateView()
 
         self.location = self.game.state.data.agentStates[0].getPosition()
+        self.ghostLocations = [a.getPosition() for a in self.game.state.data.agentStates[1:]]
         self.location_history = [self.location]
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history = [self.orientation]
@@ -121,6 +122,7 @@ class PacmanEnv(gym.Env):
             'past_orientation': [[self.orientation_history[-1]]],
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
+            'ghost_positions': [self.ghostLocations],
             'step_counter': [[0]],
         }
 
@@ -137,6 +139,7 @@ class PacmanEnv(gym.Env):
                 'curr_orientation': [[self.orientation_history[-1]]],
                 'illegal_move_counter': [self.illegal_move_counter],
                 'step_counter': [[self.step_counter]],
+                'ghost_positions': [self.ghostLocations],
                 'r': [self.cum_reward],
                 'l': [self.step_counter],
                 'episode': [{
@@ -177,7 +180,8 @@ class PacmanEnv(gym.Env):
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
             'step_counter': [[self.step_counter]],
-            'episode': [None]
+            'episode': [None],
+            'ghost_positions': [self.ghostLocations],
         }
 
         if self.step_counter >= MAX_EP_LENGTH:
