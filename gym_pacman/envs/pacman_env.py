@@ -124,8 +124,8 @@ class PacmanEnv(gym.Env):
 
         self.location = self.game.state.data.agentStates[0].getPosition()
         self.ghostLocations = [a.getPosition() for a in self.game.state.data.agentStates[1:]]
-        self.ghostInFrame = any([np.sum(np.abs(np.array(g) - np.array(self.location))) <= 4 for g in self.ghostLocations])
-        
+        self.ghostInFrame = any([np.sum(np.abs(np.array(g) - np.array(self.location))) <= 2 for g in self.ghostLocations])
+
         self.location_history = [self.location]
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history = [self.orientation]
@@ -192,7 +192,8 @@ class PacmanEnv(gym.Env):
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history.append(self.orientation)
 
-        self.ghostInFrame = any([np.sum(np.abs(np.array(g) - np.array(self.location))) <= 4 
+        extent = (self.location[0] - 1, self.location[1] - 1),(self.location[0] + 1, self.location[1] + 1),
+        self.ghostInFrame = any([ g[0] >= extent[0][0] and g[1] >= extent[0][1] and g[0] <= extent[1][0] and g[1] <= extent[1][1]
             for g in self.ghostLocations])
         self.step_counter += 1
         info = {
@@ -231,10 +232,10 @@ class PacmanEnv(gym.Env):
         DEFAULT_GRID_SIZE_X, DEFAULT_GRID_SIZE_Y = w / float(self.layout.width), h / float(self.layout.height)
 
         extent = [
-            DEFAULT_GRID_SIZE_X *  (self.location[0] - 1.5),
-            DEFAULT_GRID_SIZE_Y *  (self.layout.height - (self.location[1] + 2.5)),
-            DEFAULT_GRID_SIZE_X *  (self.location[0] + 2.5),
-            DEFAULT_GRID_SIZE_Y *  (self.layout.height - (self.location[1] - 1.5))]
+            DEFAULT_GRID_SIZE_X *  (self.location[0] - 1),
+            DEFAULT_GRID_SIZE_Y *  (self.layout.height - (self.location[1] + 2.2)),
+            DEFAULT_GRID_SIZE_X *  (self.location[0] + 2),
+            DEFAULT_GRID_SIZE_Y *  (self.layout.height - (self.location[1] - 1.2))]
         extent = tuple([int(e) for e in extent])
         self.image_sz = (84,84)
         image = image.crop(extent).resize(self.image_sz)
