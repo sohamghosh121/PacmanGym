@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -165,11 +165,11 @@ def generateMaze(maze_size, decimation, start_pos,np_random):
 
     while len(stack) > 0:
         pos, prev_dir = stack.pop()
-        # Has this not been filled since being added?                                                            
+        # Has this not been filled since being added?
         if maze[pos[0]][pos[1]] == 1.:
             continue
 
-        # Fill in this point + break down wall from previous position                                            
+        # Fill in this point + break down wall from previous position
         maze[pos[0]][pos[1]] = 1.
         from_y = pos[0]-prev_dir[0]
         from_x = pos[1]-prev_dir[1]
@@ -209,7 +209,7 @@ def randomLayout(layout_params, np_random):
 
     start_x, start_y = np_random.randint(1, size - 1), np_random.randint(1, size - 1)
 
-    
+
     maze = generateMaze(size, 0.3, (start_y, start_x), np_random).astype(np.int)
     # maze = np.zeros((size, size), dtype=np.int)
     # maze[1:size-1,1:size-1] = maze_
@@ -221,7 +221,7 @@ def randomLayout(layout_params, np_random):
         for ix in range(empty_positions[0].shape[0]):
             if np.random.rand() <= food_proportion:
                 maze[empty_positions[0][ix], empty_positions[1][ix]] = FOOD
-                foods.append(empty_positions[0][ix], empty_positions[1][ix])
+                foods.append((empty_positions[0][ix], empty_positions[1][ix]))
     else:
         food_positions = np.random.choice(np.arange(empty_positions[0].shape[0]), npellets)
         for pos in food_positions:
@@ -238,7 +238,7 @@ def randomLayout(layout_params, np_random):
     filter_ix = np.where(np.sum(np.abs(empty_positions - np.expand_dims([start_y, start_x], 1)), axis=0) > 2)[0]
     empty_positions = empty_positions[:, filter_ix]
 
-    if empty_positions.shape[1] >= nghosts: # if found a proper place to put ghost
+    if empty_positions.shape[1] >= nghosts and nghosts > 0: # if found a proper place to put ghost
         ghost_position_ix = np_random.choice(empty_positions.shape[1], nghosts)
         for gix in ghost_position_ix:
             ghost_pos_y, ghost_pos_x = empty_positions[0][gix], empty_positions[1][gix]
@@ -252,7 +252,7 @@ def randomLayout(layout_params, np_random):
         line = ''.join([ITEM_REPR_STR[m] for m in maze[i]])
         maze_str.append(line)
     return Layout(maze_str), nok
-    
+
 def dfsReachabilityCheck(maze, start_x, start_y, food_positions):
     stack = [(start_y, start_x)]
     visited = set()
