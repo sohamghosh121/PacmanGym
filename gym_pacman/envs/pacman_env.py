@@ -124,7 +124,8 @@ class PacmanEnv(gym.Env):
 
         self.location = self.game.state.data.agentStates[0].getPosition()
         self.ghostLocations = [a.getPosition() for a in self.game.state.data.agentStates[1:]]
-        self.ghostInFrame = any([np.sum(np.array(g) - np.array(self.location)) <= 2 for g in self.ghostLocations])
+        self.ghostInFrame = any([np.sum(np.abs(np.array(g) - np.array(self.location))) <= 4 for g in self.ghostLocations])
+        
         self.location_history = [self.location]
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history = [self.orientation]
@@ -139,7 +140,7 @@ class PacmanEnv(gym.Env):
             'curr_orientation': [[self.orientation_history[-1]]],
             'illegal_move_counter': [self.illegal_move_counter],
             'ghost_positions': [self.ghostLocations],
-            'ghostInFrame': [self.ghostInFrame],
+            'ghost_in_frame': [self.ghostInFrame],
             'step_counter': [[0]],
         }
 
@@ -159,6 +160,7 @@ class PacmanEnv(gym.Env):
                 'ghost_positions': [self.ghostLocations],
                 'r': [self.cum_reward],
                 'l': [self.step_counter],
+                'ghost_in_frame': [self.ghostInFrame],
                 'episode': [{
                     'r': self.cum_reward,
                     'l': self.step_counter
@@ -185,10 +187,15 @@ class PacmanEnv(gym.Env):
 
         self.location = self.game.state.data.agentStates[0].getPosition()
         self.location_history.append(self.location)
+        self.ghostLocations = [a.getPosition() for a in self.game.state.data.agentStates[1:]]
 
         self.orientation = PACMAN_DIRECTIONS.index(self.game.state.data.agentStates[0].getDirection())
         self.orientation_history.append(self.orientation)
 
+        self.ghostInFrame = any([np.sum(np.abs(np.array(g) - np.array(self.location))) <= 4 
+            for g in self.ghostLocations])
+        print(np.abs(np.array(self.ghostLocations[0]) - np.array(self.location)))
+        print(np.sum(np.abs(np.array(self.ghostLocations[0]) - np.array(self.location))))
         self.step_counter += 1
         info = {
             'past_loc': [self.location_history[-2]],
@@ -199,6 +206,7 @@ class PacmanEnv(gym.Env):
             'step_counter': [[self.step_counter]],
             'episode': [None],
             'ghost_positions': [self.ghostLocations],
+            'ghost_in_frame': [self.ghostInFrame],
         }
 
         if self.step_counter >= MAX_EP_LENGTH:

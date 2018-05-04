@@ -15,6 +15,7 @@ while True:
     while not done:
         i += 1
         s_, r, done, info = env.step(env.action_space.sample())
-        print(info)
+        print(info['ghost_positions'], info['curr_loc'])
+        time.sleep(1.0)
         env.render()
         
