@@ -8,14 +8,13 @@ env.seed(1)
 
 
 done = False
-i = 0
+
 while True:
     done = False
     env.reset()
-    while not done:
+    i = 0
+    while i < 5:
         i += 1
         s_, r, done, info = env.step(env.action_space.sample())
-        print(info['ghost_positions'], info['curr_loc'])
-        time.sleep(1.0)
         env.render()
         

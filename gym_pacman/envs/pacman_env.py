@@ -194,8 +194,6 @@ class PacmanEnv(gym.Env):
 
         self.ghostInFrame = any([np.sum(np.abs(np.array(g) - np.array(self.location))) <= 4 
             for g in self.ghostLocations])
-        print(np.abs(np.array(self.ghostLocations[0]) - np.array(self.location)))
-        print(np.sum(np.abs(np.array(self.ghostLocations[0]) - np.array(self.location))))
         self.step_counter += 1
         info = {
             'past_loc': [self.location_history[-2]],

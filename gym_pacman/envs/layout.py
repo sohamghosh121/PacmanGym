@@ -20,6 +20,9 @@ import numpy as np
 
 VISIBILITY_MATRIX_CACHE = {}
 
+WALL, EMPTY, PACMAN, GHOST, FOOD = 0, 1, 2, 3, 4
+ITEM_REPR_STR = '% PG.'
+
 class Layout:
     """
     A Layout manages the static information about the game board.
@@ -187,11 +190,17 @@ def generateMaze(maze_size, decimation, start_pos,np_random):
         for x in range(1, maze_size-1):
             if np_random.uniform() < decimation:
                 maze[y][x] = 1.
-
     return maze
 
 def getRandomLayout(layout_params, np_random):
-    # no empty
+    nok = True
+    while nok:
+        # print('Sampling new layout')
+        layout, nok = randomLayout(layout_params, np_random)
+    return layout
+
+def randomLayout(layout_params, np_random):
+    nok = False
     size = layout_params.get('size', 7)
     nghosts = layout_params.get('nghosts', 1)
     npellets = layout_params.get('npellets', 1)
@@ -200,24 +209,28 @@ def getRandomLayout(layout_params, np_random):
 
     start_x, start_y = np_random.randint(1, size - 1), np_random.randint(1, size - 1)
 
-    WALL, EMPTY, PACMAN, GHOST, FOOD = 0, 1, 2, 3, 4
-    ITEM_REPR_STR = '% PG.'
-
-    maze = generateMaze(size, 0.3, (start_x, start_y), np_random).astype(np.int)
+    
+    maze = generateMaze(size, 0.3, (start_y, start_x), np_random).astype(np.int)
     # maze = np.zeros((size, size), dtype=np.int)
     # maze[1:size-1,1:size-1] = maze_
     maze[start_y, start_x] = PACMAN
 
     empty_positions = np.where(maze == EMPTY)
+    foods = []
     if by_proportion:
         for ix in range(empty_positions[0].shape[0]):
             if np.random.rand() <= food_proportion:
                 maze[empty_positions[0][ix], empty_positions[1][ix]] = FOOD
+                foods.append(empty_positions[0][ix], empty_positions[1][ix])
     else:
         food_positions = np.random.choice(np.arange(empty_positions[0].shape[0]), npellets)
         for pos in food_positions:
             maze[empty_positions[0][pos], empty_positions[1][pos]] = FOOD
-
+            foods.append((empty_positions[0][pos], empty_positions[1][pos]))
+    reachable = dfsReachabilityCheck(maze, start_x, start_y, foods)
+    if not reachable:
+        # print('Not reachable')
+        return None, True
     empty_positions = np.where(maze == EMPTY)
 
     # filter out positions within 2 steps of pacman
@@ -225,17 +238,41 @@ def getRandomLayout(layout_params, np_random):
     filter_ix = np.where(np.sum(np.abs(empty_positions - np.expand_dims([start_y, start_x], 1)), axis=0) > 2)[0]
     empty_positions = empty_positions[:, filter_ix]
 
-    if empty_positions.shape[1] > 0: # if found a proper place to put ghost
+    if empty_positions.shape[1] >= nghosts: # if found a proper place to put ghost
         ghost_position_ix = np_random.choice(empty_positions.shape[1], nghosts)
         for gix in ghost_position_ix:
             ghost_pos_y, ghost_pos_x = empty_positions[0][gix], empty_positions[1][gix]
             maze[ghost_pos_y, ghost_pos_x] = GHOST
-        
+    else:
+        # print('Could not find enough positions for ghosts')
+        return None, True
+
     maze_str = []
     for i in range(maze.shape[0]):
         line = ''.join([ITEM_REPR_STR[m] for m in maze[i]])
         maze_str.append(line)
-    return Layout(maze_str)
+    return Layout(maze_str), nok
+    
+def dfsReachabilityCheck(maze, start_x, start_y, food_positions):
+    stack = [(start_y, start_x)]
+    visited = set()
+    while len(stack) > 0:
+        curr = stack.pop()
+        visited.add(curr)
+        neighbors = []
+        for delta in [(-1,0), (1,0), (0,-1), (0,1)]:
+            next_pos = (curr[0] + delta[0], curr[1] + delta[1])
+            if next_pos[0] < 0 or next_pos[1] < 0:
+                continue
+            elif next_pos[0] >= maze.shape[0] or next_pos[1] >= maze.shape[1]:
+                continue
+            elif maze[next_pos[0], next_pos[1]] == EMPTY or maze[next_pos[0], next_pos[1]] == FOOD:
+                if next_pos not in visited:
+                    neighbors.append(next_pos)
+        stack.extend(neighbors)
+    food_reachable = all([f in visited for f in food_positions])
+    return food_reachable
+
 
 def tryToLoad(fullname):
     if(not os.path.exists(fullname)): return None
